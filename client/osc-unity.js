@@ -61,17 +61,7 @@ function touchStarted() {
   }
 }
 
-function mousePressed() {
-  if ( song.isPlaying() ) { // .isPlaying() returns a boolean
-    song.stop();
-    background(255,0,0);
-  } else {
-    song.play();
-    background(0,255,0);
-  }
-}
 function setup() {
-    song = loadSound('lyde/lyd.mp3');
 	setupOsc(); //Begynd at lytte efter OSC
     
 
@@ -225,14 +215,6 @@ function receiveOsc(address, value) {
         
 	if (address.split('/')[1] === "wek") {
 		// besked fra Wekinator
-	}
-
-    if (address.split('/')[1] === "looking") {
-		// besked fra Unity
-        value = ("SPIL DEN LYD");
-        song.play();
-        
-        
 	}
 
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
