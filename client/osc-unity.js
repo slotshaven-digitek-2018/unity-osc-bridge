@@ -17,6 +17,9 @@ let containerSection;
 
 let socket;
 
+
+var song;
+
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
 let listeningSliders = [];
 let lightIntensitySlider;
@@ -29,15 +32,18 @@ let lockSlider;
 //Node serveren lytter (fx på beskeder fra wekinator) på port 11000
 let bridgeConfig = {
 	local: {
+        //Her sætter vi scriptet til at modtage OSC på localhost:11000
 		port: 11000,
 		host: '127.0.0.1'
 	},
 	remotes: [{
+        //Unity modtager OSC på den ip adresse den siger: 12000
 			name: "unity",
 			port: 12000,
-			host: '100.106.113.6'
+			host: '10.138.65.221'
 		},
 		{
+            //Hvis i har et processing skitse tilknyttet en arduino skal i programmere den til at OSC på port 10330
 			name: "arduino",
 			port: 10330,
 			host: '192.168.8.105'
@@ -45,9 +51,25 @@ let bridgeConfig = {
 	]
 };
 
-function setup() {
+function touchStarted() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+}
 
+function mousePressed() {
+  if ( song.isPlaying() ) { // .isPlaying() returns a boolean
+    song.stop();
+    background(255,0,0);
+  } else {
+    song.play();
+    background(0,255,0);
+  }
+}
+function setup() {
+    song = loadSound('lyde/lyd.mp3');
 	setupOsc(); //Begynd at lytte efter OSC
+    
 
 	// Page container
 
@@ -58,6 +80,7 @@ function setup() {
 	createElement("h3", "Unity netværksadresse")
 		.parent(containerSection);
 
+    //Den løber igennem konfigurations json og sætter det på severen
 	let unityConfig = bridgeConfig.remotes.filter(r => r.name === "unity")[0];
 	unityHostInputField = createElement("p", unityConfig.host + ":" + unityConfig.port)
 		.parent(containerSection);
@@ -187,8 +210,17 @@ Nedenstående er OSC funktioner.
 */
 
 function receiveOsc(address, value) {
+        
 	if (address.split('/')[1] === "wek") {
 		// besked fra Wekinator
+	}
+
+    if (address.split('/')[1] === "looking") {
+		// besked fra Unity
+        value = ("SPIL DEN LYD");
+        song.play();
+        
+        
 	}
 
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
