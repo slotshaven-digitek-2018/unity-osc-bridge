@@ -17,6 +17,8 @@ let containerSection;
 
 let socket;
 
+let sound;
+
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
 let listeningSliders = [];
 let lightIntensitySlider;
@@ -50,6 +52,8 @@ let bridgeConfig = {
 };
 
 function setup() {
+
+	song = loadSound('audio/lyd.mp3');
 
 	setupOsc(); //Begynd at lytte efter OSC
 
