@@ -199,6 +199,11 @@ function receiveOsc(address, value) {
 		// besked fra Wekinator
 	}
 
+	if (address.split('/')[1] === "looking") {
+		// besked fra Unity
+		sound.play();
+	}
+
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
 
 	//Her løber vi alle slidere igennem
