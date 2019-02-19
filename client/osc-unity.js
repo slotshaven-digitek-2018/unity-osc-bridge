@@ -29,15 +29,18 @@ let lockSlider;
 //Node serveren lytter (fx på beskeder fra wekinator) på port 11000
 let bridgeConfig = {
 	local: {
+		//Her sætter vi scriptet til at modtage OSC på localhost:11000
 		port: 11000,
 		host: '127.0.0.1'
 	},
 	remotes: [{
+			//Unity modtager OSC på DEN IP ADRESSE DEN SIGER: 12000
 			name: "unity",
 			port: 12000,
-			host: '100.106.113.6'
+			host: '10.138.68.13'
 		},
 		{
+			//HVIS i har et processing skitse tilknyttet en ARDUINO skal i programmere den til at modtage OSC på port 10330
 			name: "arduino",
 			port: 10330,
 			host: '192.168.8.105'
@@ -54,10 +57,10 @@ function setup() {
 	containerSection = createElement("section", "").addClass("container");
 
 	// Unity adresse
-
 	createElement("h3", "Unity netværksadresse")
 		.parent(containerSection);
 
+	//Den løber igennem konfigurations JSON og sætter det på serveren
 	let unityConfig = bridgeConfig.remotes.filter(r => r.name === "unity")[0];
 	unityHostInputField = createElement("p", unityConfig.host + ":" + unityConfig.port)
 		.parent(containerSection);
@@ -92,6 +95,13 @@ function setup() {
 			sendOsc("/text", textInput.value());
 		});
 
+		createElement('p','Her er jeg').parent(containerSection);
+	createElement('button', "sendKnud").parent(containerSection).mousePressed(sendKnud);
+
+	function sendKnud() {
+		sendOsc("/knud", "knud");
+	}
+
 	// Blik
 
 	createElement("h3", "Lås")
@@ -108,7 +118,9 @@ function setup() {
 		slider: lockSlider,
 		address: "/looking",
 		index: 0,
-		parseValue: (val) => {return 1.0-val} // negate looking value
+		parseValue: (val) => {
+			return 1.0 - val
+		} // negate looking value
 	});
 
 
@@ -200,7 +212,7 @@ function receiveOsc(address, value) {
 			//Hvis der er en værdi i value arrayet
 			if (value[s.index]) {
 
-				if(s.parseValue){
+				if (s.parseValue) {
 					value[s.index] = s.parseValue(value[s.index]);
 				}
 
