@@ -17,9 +17,6 @@ let containerSection;
 
 let socket;
 
-
-var song;
-
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
 let listeningSliders = [];
 let lightIntensitySlider;
@@ -36,18 +33,15 @@ let lockSlider;
 
 let bridgeConfig = {
 	local: {
-        //Her sætter vi scriptet til at modtage OSC på localhost:11000
 		port: 11000,
 		host: '127.0.0.1'
 	},
 	remotes: [{
-        //Unity modtager OSC på den ip adresse den siger: 12000
 			name: "unity",
 			port: 12000,
-			host: '10.138.65.221'
+			host: '10.138.67.64'
 		},
 		{
-            //Hvis i har et processing skitse tilknyttet en arduino skal i programmere den til at OSC på port 10330
 			name: "arduino",
 			port: 10330,
 			host: '192.168.8.105'
@@ -55,15 +49,9 @@ let bridgeConfig = {
 	]
 };
 
-function touchStarted() {
-  if (getAudioContext().state !== 'running') {
-    getAudioContext().resume();
-  }
-}
-
 function setup() {
+
 	setupOsc(); //Begynd at lytte efter OSC
-    
 
 	// Page container
 
@@ -74,7 +62,6 @@ function setup() {
 	createElement("h3", "Unity netværksadresse")
 		.parent(containerSection);
 
-    //Den løber igennem konfigurations json og sætter det på severen
 	let unityConfig = bridgeConfig.remotes.filter(r => r.name === "unity")[0];
 	unityHostInputField = createElement("p", unityConfig.host + ":" + unityConfig.port)
 		.parent(containerSection);
@@ -204,7 +191,6 @@ Nedenstående er OSC funktioner.
 */
 
 function receiveOsc(address, value) {
-        
 	if (address.split('/')[1] === "wek") {
 		// besked fra Wekinator
 	}
