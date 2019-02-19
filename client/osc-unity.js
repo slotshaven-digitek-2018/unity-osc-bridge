@@ -3,7 +3,7 @@ Skriv denne kommando i terminalen:
 node bridge.js
 */
 
-// input til atsende beskeder til Unity
+// input til at sende tekst beskeder til Unity VR
 let textInput;
 
 let unityHostInputField;
@@ -17,6 +17,9 @@ let containerSection;
 
 let socket;
 
+
+var song;
+
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
 let listeningSliders = [];
 let lightIntensitySlider;
@@ -26,7 +29,11 @@ let lightDirectionSliders = {};
 let lockSlider;
 
 //Vi sætter alle konfigurationsoplysninger i et array 
-//Node serveren lytter (fx på beskeder fra wekinator) på port 11000
+//Lytter (fx på beskeder fra wekinator) på port 11000
+//Sender beskeder til Unity på port 12000
+//Sender beskeder til en evt låsemekanisme på åport 10330
+//IP'erne kan være lokale eller over netværk - doesn't matter
+
 let bridgeConfig = {
 	local: {
 		//Her sætter vi scriptet til at modtage OSC på localhost:11000
@@ -48,9 +55,25 @@ let bridgeConfig = {
 	]
 };
 
-function setup() {
+function touchStarted() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+}
 
+function mousePressed() {
+  if ( song.isPlaying() ) { // .isPlaying() returns a boolean
+    song.stop();
+    background(255,0,0);
+  } else {
+    song.play();
+    background(0,255,0);
+  }
+}
+function setup() {
+    song = loadSound('lyde/lyd.mp3');
 	setupOsc(); //Begynd at lytte efter OSC
+    
 
 	// Page container
 
@@ -199,8 +222,17 @@ Nedenstående er OSC funktioner.
 */
 
 function receiveOsc(address, value) {
+        
 	if (address.split('/')[1] === "wek") {
 		// besked fra Wekinator
+	}
+
+    if (address.split('/')[1] === "looking") {
+		// besked fra Unity
+        value = ("SPIL DEN LYD");
+        song.play();
+        
+        
 	}
 
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
