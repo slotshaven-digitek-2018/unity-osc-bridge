@@ -3,7 +3,7 @@ Skriv denne kommando i terminalen:
 node bridge.js
 */
 
-// input til atsende beskeder til Unity
+// input til at sende tekst beskeder til Unity VR
 let textInput;
 
 let unityHostInputField;
@@ -29,7 +29,11 @@ let lightDirectionSliders = {};
 let lockSlider;
 
 //Vi sætter alle konfigurationsoplysninger i et array 
-//Node serveren lytter (fx på beskeder fra wekinator) på port 11000
+//Lytter (fx på beskeder fra wekinator) på port 11000
+//Sender beskeder til Unity på port 12000
+//Sender beskeder til en evt låsemekanisme på åport 10330
+//IP'erne kan være lokale eller over netværk - doesn't matter
+
 let bridgeConfig = {
 	local: {
         //Her sætter vi scriptet til at modtage OSC på localhost:11000
