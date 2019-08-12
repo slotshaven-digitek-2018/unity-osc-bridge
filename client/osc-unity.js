@@ -34,8 +34,8 @@ let bridgeConfig = {
 	},
 	remotes: [{
 			name: "unity",
-			port: 12000,
-			host: '100.106.113.6'
+			port: 12001,
+			host: '10.138.67.0'
 		},
 		{
 			name: "arduino",
