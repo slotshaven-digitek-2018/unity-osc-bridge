@@ -3,7 +3,7 @@ Skriv denne kommando i terminalen:
 node bridge.js
 */
 
-// input til atsende beskeder til Unity
+// input til at sende tekst beskeder til Unity VR
 let textInput;
 
 let unityHostInputField;
@@ -17,6 +17,9 @@ let containerSection;
 
 let socket;
 
+
+var song;
+
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
 let listeningSliders = [];
 let lightIntensitySlider;
@@ -26,18 +29,25 @@ let lightDirectionSliders = {};
 let lockSlider;
 
 //Vi sætter alle konfigurationsoplysninger i et array 
-//Node serveren lytter (fx på beskeder fra wekinator) på port 11000
+//Lytter (fx på beskeder fra wekinator) på port 11000
+//Sender beskeder til Unity på port 12000
+//Sender beskeder til en evt låsemekanisme på åport 10330
+//IP'erne kan være lokale eller over netværk - doesn't matter
+
 let bridgeConfig = {
 	local: {
+		//Her sætter vi scriptet til at modtage OSC på localhost:11000
 		port: 11000,
 		host: '127.0.0.1'
 	},
 	remotes: [{
+			//Unity modtager OSC på DEN IP ADRESSE DEN SIGER: 12000
 			name: "unity",
-			port: 12001,
-			host: '10.138.67.0'
+			port: 12000,
+			host: '10.138.68.13'
 		},
 		{
+			//HVIS i har et processing skitse tilknyttet en ARDUINO skal i programmere den til at modtage OSC på port 10330
 			name: "arduino",
 			port: 10330,
 			host: '192.168.8.105'
@@ -45,19 +55,25 @@ let bridgeConfig = {
 	]
 };
 
-function setup() {
+function touchStarted() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+}
 
+function setup() {
 	setupOsc(); //Begynd at lytte efter OSC
+    
 
 	// Page container
 
 	containerSection = createElement("section", "").addClass("container");
 
 	// Unity adresse
-
 	createElement("h3", "Unity netværksadresse")
 		.parent(containerSection);
 
+	//Den løber igennem konfigurations JSON og sætter det på serveren
 	let unityConfig = bridgeConfig.remotes.filter(r => r.name === "unity")[0];
 	unityHostInputField = createElement("p", unityConfig.host + ":" + unityConfig.port)
 		.parent(containerSection);
@@ -92,6 +108,13 @@ function setup() {
 			sendOsc("/text", textInput.value());
 		});
 
+		createElement('p','Her er jeg').parent(containerSection);
+	createElement('button', "sendKnud").parent(containerSection).mousePressed(sendKnud);
+
+	function sendKnud() {
+		sendOsc("/knud", "knud");
+	}
+
 	// Blik
 
 	createElement("h3", "Lås")
@@ -108,7 +131,9 @@ function setup() {
 		slider: lockSlider,
 		address: "/looking",
 		index: 0,
-		parseValue: (val) => {return 1.0-val} // negate looking value
+		parseValue: (val) => {
+			return 1.0 - val
+		} // negate looking value
 	});
 
 
@@ -187,6 +212,7 @@ Nedenstående er OSC funktioner.
 */
 
 function receiveOsc(address, value) {
+        
 	if (address.split('/')[1] === "wek") {
 		// besked fra Wekinator
 	}
@@ -200,7 +226,7 @@ function receiveOsc(address, value) {
 			//Hvis der er en værdi i value arrayet
 			if (value[s.index]) {
 
-				if(s.parseValue){
+				if (s.parseValue) {
 					value[s.index] = s.parseValue(value[s.index]);
 				}
 
