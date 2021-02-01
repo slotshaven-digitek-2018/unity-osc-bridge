@@ -17,7 +17,6 @@ let containerSection;
 
 let socket;
 
-
 var song;
 
 //Alle slidere gemmes i et array, så de senere kan manipuleres samlet
@@ -31,7 +30,8 @@ let lockSlider;
 //Vi sætter alle konfigurationsoplysninger i et array 
 //Lytter (fx på beskeder fra wekinator) på port 11000
 //Sender beskeder til Unity på port 12000
-//Sender beskeder til en evt låsemekanisme på åport 10330
+//Sender beskeder til en evt låsemekanisme på port 10330
+//Sender beskeder til en evt wekinator på port 6448
 //IP'erne kan være lokale eller over netværk - doesn't matter
 
 let bridgeConfig = {
@@ -44,13 +44,19 @@ let bridgeConfig = {
 			//Unity modtager OSC på DEN IP ADRESSE DEN SIGER: 12000
 			name: "unity",
 			port: 12000,
-			host: '10.138.68.13'
+			host: '192.168.1.77' // Tilrettes efter hvad Unity-app'en fortæller
 		},
 		{
-			//HVIS i har et processing skitse tilknyttet en ARDUINO skal i programmere den til at modtage OSC på port 10330
+			//HVIS i har et processing skitse tilknyttet en ARDUINO skal I programmere den til at modtage OSC på port 10330
 			name: "arduino",
 			port: 10330,
-			host: '192.168.8.105'
+			host: '192.168.8.105' // Tilrettes efter adressen på Arduinoens adgang til netværket
+		},
+		{
+			//HVIS i har et processing skitse tilknyttet WEKINATOR vil den modtage OSC på port 6448
+			name: "wekinator",
+			port: 6448,
+			host: '192.168.8.105' // Tilrettes efter adressen på Wekinatorens adgang til netværket
 		}
 	]
 };
@@ -62,9 +68,8 @@ function touchStarted() {
 }
 
 function setup() {
-	setupOsc(); //Begynd at lytte efter OSC
+	setupOsc(); // Begynd at lytte efter OSC - nederst i scriptet her
     
-
 	// Page container
 
 	containerSection = createElement("section", "").addClass("container");
@@ -78,23 +83,15 @@ function setup() {
 	unityHostInputField = createElement("p", unityConfig.host + ":" + unityConfig.port)
 		.parent(containerSection);
 
-	/* VIRKER IKKE
-	connectButton = createButton("Forbind")
-		.parent(containerSection)
-		.changed(() => {
-			bridgeConfig.client.host = unityHostInputField.value();
-			socket.emit('config', bridgeConfig);
-		})
-	*/
 
-	// Arudino adresse
-
-	createElement("h3", "Arudino netværksadresse")
+	// Arduino adresse
+	/*
+	createElement("h3", "Arduino netværksadresse")
 		.parent(containerSection);
 
 	let arduinoConfig = bridgeConfig.remotes.filter(r => r.name === "arduino")[0];
 	unityHostInputField = createElement("p", arduinoConfig.host + ":" + arduinoConfig.port)
-		.parent(containerSection);
+		.parent(containerSection);*/
 
 	// Tekst besked
 
@@ -108,14 +105,14 @@ function setup() {
 			sendOsc("/text", textInput.value());
 		});
 
-		createElement('p','Her er jeg').parent(containerSection);
-	createElement('button', "sendKnud").parent(containerSection).mousePressed(sendKnud);
+	createElement('p','Her er jeg').parent(containerSection);
+	createElement('button', "send Knud").parent(containerSection).mousePressed(sendKnud);
 
 	function sendKnud() {
 		sendOsc("/knud", "knud");
 	}
 
-	// Blik
+	// Lås
 
 	createElement("h3", "Lås")
 		.parent(containerSection);
@@ -135,7 +132,6 @@ function setup() {
 			return 1.0 - val
 		} // negate looking value
 	});
-
 
 	// Lys
 
@@ -208,7 +204,7 @@ function setup() {
 }
 
 /*
-Nedenstående er OSC funktioner. 
+  Nedenstående er OSC funktioner. 
 */
 
 function receiveOsc(address, value) {
@@ -219,18 +215,18 @@ function receiveOsc(address, value) {
 
 	resultPre.html(address + "   " + value + '\n' + resultPre.html());
 
-	//Her løber vi alle slidere igennem
+	// Her løber vi alle slidere igennem
 	listeningSliders.map(s => {
-		//Hvis adressen svarer til sliderens adresse (fx wek/outputs)
+		// Hvis adressen svarer til sliderens adresse (fx wek/outputs)
 		if (address === s.address) {
-			//Hvis der er en værdi i value arrayet
+			// Hvis der er en værdi i value arrayet
 			if (value[s.index]) {
 
 				if (s.parseValue) {
 					value[s.index] = s.parseValue(value[s.index]);
 				}
 
-				//let sliderValue = map(value[s.index], 0.0, 1.0, s.slider.elt.min, s.slider.elt.max);
+				// let sliderValue = map(value[s.index], 0.0, 1.0, s.slider.elt.min, s.slider.elt.max);
 				let sliderValue = map(value[s.index], 0.0, 1.0, -18000, 18000);
 				console.log("slider " + s.index + " got value", value[s.index] + " map returns " + sliderValue);
 				s.slider.elt.value = sliderValue;
@@ -255,7 +251,8 @@ function sendOsc(address, value) {
 	socket.emit('message', [address].concat(value));
 }
 
-function setupOsc() {
+function setupOsc() {// Det betyder at i den mappe der hedder "/client" der ligger de filer som browsere må se
+
 	socket = io.connect('http://127.0.0.1:8081', {
 		port: 8081,
 		rememberTransport: false
